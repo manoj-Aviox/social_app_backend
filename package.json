@@ -4,14 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node index.js",
-    "builds": [
-      {
-        "src": "index.js",
-        "use": "@now/node"
-      }
-    ]
+    "dev": "nodemon index.js"
   },
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@now/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

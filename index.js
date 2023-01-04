@@ -78,6 +78,10 @@ app.use("/api/posts", posts);
 app.use("/api/messages", messages);
 app.use("/api/chats", chats);
 
+app.get('/', (req, res) => {
+  res.send('Hey this is my API running 🥳')
+})
+
 // server starting
 server.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);
