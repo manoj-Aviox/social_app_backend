@@ -1,21 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const user = require("../models/userModel");
-// const CryptoJS = require("crypto-js");
+const CryptoJS = require("crypto-js");
 var jwt = require("jsonwebtoken");
 
 // user create
 router.post("/signup", async (req, res) => {
   try {
     const newUser = new user({
-      ...req.body
+      ...req.body,
       // name: req.body.name,
       // username: req.body.username,
       // email: req.body.email,
-      // password: CryptoJS.AES.encrypt(
-      //   req.body.password,
-      //   process.env.CRYPTO_SECRET
-      // ).toString(),
+      password: CryptoJS.AES.encrypt(
+        req.body.password,
+        process.env.CRYPTO_SECRET
+      ).toString(),
     });
     await user.create(newUser);
     res.status(201).send({ message: "User Created" });
@@ -36,11 +36,11 @@ router.post("/login", async (req, res) => {
   try {
     const userFind = await user.findOne({ email: req.body.email });
     if (userFind !== null) {
-      // const originalPassword = CryptoJS.AES.decrypt(
-      //   userFind.password,
-      //   process.env.CRYPTO_SECRET
-      // ).toString(CryptoJS.enc.Utf8);
-      if (userFind.password === req.body.password) {
+      const originalPassword = CryptoJS.AES.decrypt(
+        userFind.password,
+        process.env.CRYPTO_SECRET
+      ).toString(CryptoJS.enc.Utf8);
+      if (originalPassword === req.body.password) {
         var token = jwt.sign(req.body, process.env.JWT_SECRET);
         res
           .status(200)
