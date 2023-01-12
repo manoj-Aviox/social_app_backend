@@ -1,163 +1,122 @@
-const express = require("express");
-const router = express.Router();
-const users = require("../models/userModel");
-const posts = require("../models/postModel");
+const router = require("express").Router();
+const user = require("../models/userModel");
+const post = require("../models/postModel");
 const upload = require("../middlewares/upload");
-var jwt = require("jsonwebtoken");
+const VerifyToken = require("../middlewares/VerifyToken");
 
-// GET ALL POSTS
+// ALL POSTS
 router.get("/", async (req, res) => {
   try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const data = await posts.find();
-      res.send({ data: data.reverse() });
-    } else {
-      res.send({ message: "Invalid Token" });
-    }
+    const data = await post.find();
+    res.send({ posts: data.reverse() });
   } catch (error) {
-    res.send(error);
+    console.log(error);
   }
 });
 
-// GET Posts by userID
-router.get("/myPosts", async (req, res) => {
+// POSTS BY USER
+router.get("/:userId", async (req, res) => {
   try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const data = await posts.find({ userId: userCheck._id });
-      res.send({ data: data });
+    const userExist = await user.findOne({ _id: req.params.userId });
+    if (userExist) {
+      const data = await post.find({ user_id: req.params.userId });
+      res.send({ posts: data });
     } else {
-      res.send({ message: "Invalid Token" });
+      res.status(401).json({ message: "Invalid User!" });
     }
   } catch (error) {
-    res.send(error);
+    console.log(error);
   }
 });
 
 // ADD POST
-router.post("/", upload.single("file"), async (req, res) => {
-  try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const newPost = new posts({
-        ...req.body,
-        userId: userCheck._id,
-        img: req.file.filename,
-      });
-      await posts.create(newPost);
-      res.send({ message: "Created Post" });
-    } else {
-      res.send({ message: "Invalid Token" });
-    }
-  } catch (error) {
-    res.send(error);
+router.post("/", VerifyToken, upload.single("file"), async (req, res) => {
+  const { title, desc } = req.body;
+  if (!title || !desc) {
+    res.status(422).json({ message: "Please fill all fields!" });
   }
-});
-
-// UPDATE POST
-router.put("/update/:postId", upload.single("file"), async (req, res) => {
   try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const data = await posts.findById(req.params.postId);
-      if (data) {
-        if (data.userId == userCheck._id) {
-          await posts.findByIdAndUpdate(req.params.postId, {
-            ...req.body,
-            img: req.file?.filename,
-          });
-          res.send({ message: "Updated Post" });
-        } else {
-          res.status(401).json({ message: "You can't delete this post" });
-        }
-      } else {
-        res.status(400).send({ message: "Post not found" });
-      }
-    } else {
-      res.send({ message: "Invalid Token" });
-    }
+    const userExist = await user.findOne({ email: req.user.email });
+    await post.create({
+      title,
+      desc,
+      user_id: userExist._id,
+      img: req.file.filename,
+    });
+    res.send({ message: "Post Created!" });
   } catch (error) {
-    res.send(error);
-  }
-});
-
-// LIKE POST
-router.put("/:id", async (req, res) => {
-  try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const findPost = await posts.findById(req.params.id);
-
-      if (findPost.likes.includes(userCheck._id)) {
-        await posts.findByIdAndUpdate(req.params.id, {
-          $pull: {
-            likes: userCheck._id,
-          },
-        });
-        res.send({ message: "DisLiked Post" });
-      } else {
-        await posts.findByIdAndUpdate(req.params.id, {
-          $push: {
-            likes: userCheck._id,
-          },
-        });
-        res.send({ message: "Liked Post" });
-      }
-    } else {
-      res.send({ message: "Invalid Token" });
-    }
-  } catch (error) {
-    res.send(error);
+    console.log(error);
   }
 });
 
 // DELETE POST
-router.delete("/:postId", async (req, res) => {
+router.delete("/:postId", VerifyToken, async (req, res) => {
   try {
-    const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
-    const userCheck = await users.findOne({ email: decoded.email });
-    if (userCheck) {
-      const data = await posts.findById(req.params.postId);
-      console.log(data);
-      if (data) {
-        if (data.userId == userCheck._id) {
-          await posts.deleteOne({ _id: req.params.postId });
-          res.status(200).send({ message: "Deleted Post!" });
-        } else {
-          res.status(401).json({ message: "You can't delete this post" });
-        }
+    const userExist = await user.findOne({ email: req.user.email });
+    const postData = await post.findById(req.params.postId);
+    if (postData) {
+      if (postData.user_id == userExist._id) {
+        await post.deleteOne({ _id: req.params.postId });
+        res.status(200).send({ message: "Deleted Post!" });
       } else {
-        res.status(400).send({ message: "Post not found" });
+        res.status(401).json({ message: "You can't delete this post" });
       }
     } else {
-      res.send({ message: "Invalid Token" });
+      res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
-    res.send(error);
+    console.log(error);
+  }
+});
+
+// UPDATE POST
+router.put("/:postId", VerifyToken, upload.single("file"), async (req, res) => {
+  try {
+    const userExist = await user.findOne({ email: req.user.email });
+    const postData = await post.findById(req.params.postId);
+    if (postData) {
+      if (postData.user_id == userExist._id) {
+        await post.findByIdAndUpdate(req.params.postId, {
+          ...req.body,
+          img: req?.file?.filename,
+        });
+        res.status(201).send({ message: "Updated Post!" });
+      } else {
+        res.status(401).json({ message: "You can't update this post!" });
+      }
+    } else {
+      res.status(422).send({ message: "Post not found" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// LIKE & DISLIKE POST
+router.put("/like_dislike/:postId", async (req, res) => {
+  try {
+    const postData = await post.findById(req.params.postId);
+    if (postData) {
+      if (postData.likes.includes(req.body.user_id)) {
+        await post.findByIdAndUpdate(req.params.postId, {
+          $pull: {
+            likes: req.body.user_id,
+          },
+        });
+        res.status(201).send({ message: "Disliked Post!" });
+      } else {
+        await post.findByIdAndUpdate(req.params.postId, {
+          $push: {
+            likes: req.body.user_id,
+          },
+        });
+        res.status(201).send({ message: "Liked Post!" });
+      }
+    } else {
+      res.status(422).send({ message: "Post not found" });
+    }
+  } catch (error) {
+    console.log(error);
   }
 });
 

@@ -6,53 +6,58 @@ var jwt = require("jsonwebtoken");
 
 // user create
 router.post("/signup", async (req, res) => {
+  const { name, email, phone, password } = req.body;
+  if (!name || !email || !phone || !password) {
+    res.status(422).json({ message: "Please fill all fields!" });
+  }
+
   try {
-    const newUser = new user({
-      ...req.body,
-      // name: req.body.name,
-      // username: req.body.username,
-      // email: req.body.email,
-      password: CryptoJS.AES.encrypt(
-        req.body.password,
-        process.env.CRYPTO_SECRET
-      ).toString(),
-    });
-    await user.create(newUser);
-    res.status(201).send({ message: "User Created" });
+    const userExist = await user.findOne({ email: email });
+    if (userExist) {
+      res.status(400).json({ message: "Email already exists!" });
+    } else {
+      await user.create({
+        name,
+        phone,
+        email,
+        password: CryptoJS.AES.encrypt(
+          password,
+          process.env.CRYPTO_SECRET
+        ).toString(),
+      });
+      res.status(201).send({ message: "User Regitered!" });
+    }
   } catch (error) {
-    const keys = error.keyValue && Object?.keys(error.keyValue);
-    res
-      .status(401)
-      .send(
-        error.keyValue
-          ? { message: `Please enter valid ${keys[0]}`, error: true }
-          : error
-      );
+    console.log(error);
   }
 });
 
 // user login
 router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(422).json({ message: "Please fill all fields!" });
+  }
   try {
-    const userFind = await user.findOne({ email: req.body.email });
-    if (userFind !== null) {
+    const userExist = await user.findOne({ email: email });
+    if (userExist) {
       const originalPassword = CryptoJS.AES.decrypt(
-        userFind.password,
+        userExist.password,
         process.env.CRYPTO_SECRET
       ).toString(CryptoJS.enc.Utf8);
-      if (originalPassword === req.body.password) {
-        var token = jwt.sign(req.body, process.env.JWT_SECRET);
+      if (originalPassword === password) {
+        var token = jwt.sign({ email, password }, process.env.JWT_SECRET);
         res
           .status(200)
-          .send({ message: "Log In Success", data: userFind, token: token });
+          .send({ message: "Logged In!", data: userExist, token: token });
       } else {
         res.status(401).send({ message: "Wrong Password" });
       }
     } else {
-      res.status(401).send({ message: "User Not Found" });
+      res.status(400).send({ message: "User Not Found" });
     }
   } catch (error) {
-    res.send(error);
+    console.log(error);
   }
 });
 
