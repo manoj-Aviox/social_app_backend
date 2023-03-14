@@ -24,6 +24,7 @@ router.get("/:userId", async (req, res) => {
       res.status(401).json({ message: "User not found!" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -55,6 +56,7 @@ router.put(
 
       res.send({ message: "Profile Picture Updated!" });
     } catch (error) {
+      res.status(500).send("internal server error");
       console.log(error);
     }
   }
@@ -76,6 +78,7 @@ router.put(
 
       res.send({ message: "Cover Picture Updated!" });
     } catch (error) {
+      res.status(500).send("internal server error");
       console.log(error);
     }
   }
@@ -111,6 +114,7 @@ router.put("/send_request/:id", VerifyToken, async (req, res) => {
       res.send({ message: "Please enter valid userId" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -161,6 +165,7 @@ router.put("/accept_request/:id", VerifyToken, async (req, res) => {
       res.send({ message: "Please enter valid userId" });
     }
   } catch (error) {
+    
     res.send(error);
   }
 });

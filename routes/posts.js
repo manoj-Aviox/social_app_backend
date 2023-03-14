@@ -10,6 +10,7 @@ router.get("/", async (req, res) => {
     const data = await post.find();
     res.send({ posts: data.reverse() });
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -25,6 +26,7 @@ router.get("/:userId", async (req, res) => {
       res.status(401).json({ message: "Invalid User!" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -45,6 +47,7 @@ router.post("/", VerifyToken, upload.single("file"), async (req, res) => {
     });
     res.send({ message: "Post Created!" });
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -65,6 +68,7 @@ router.delete("/:postId", VerifyToken, async (req, res) => {
       res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -88,6 +92,7 @@ router.put("/:postId", VerifyToken, upload.single("file"), async (req, res) => {
       res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -116,6 +121,7 @@ router.put("/like_dislike/:postId", async (req, res) => {
       res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });

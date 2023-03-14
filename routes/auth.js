@@ -10,7 +10,6 @@ router.post("/signup", async (req, res) => {
   if (!name || !email || !phone || !password) {
     res.status(422).json({ message: "Please fill all fields!" });
   }
-
   try {
     const userExist = await user.findOne({ email: email });
     if (userExist) {
@@ -28,6 +27,7 @@ router.post("/signup", async (req, res) => {
       res.status(201).send({ message: "User Regitered!" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
@@ -57,6 +57,7 @@ router.post("/login", async (req, res) => {
       res.status(400).send({ message: "User Not Found" });
     }
   } catch (error) {
+    res.status(500).send("internal server error");
     console.log(error);
   }
 });
