@@ -26,7 +26,7 @@ router.get("/:userId", async (req, res) => {
       res.status(401).json({ message: "Invalid User!" });
     }
   } catch (error) {
-    res.status(500).send("internal server error");
+    res.status(00).send("internal server error");
     console.log(error);
   }
 });
@@ -43,7 +43,7 @@ router.post("/", VerifyToken, upload.single("file"), async (req, res) => {
       title,
       desc,
       user_id: userExist._id,
-      img: req.file.filename,
+      img: `http://localhost:4000/uploads/${req.file.filename}`,
     });
     res.send({ message: "Post Created!" });
   } catch (error) {
@@ -98,28 +98,29 @@ router.put("/:postId", VerifyToken, upload.single("file"), async (req, res) => {
 });
 
 // LIKE & DISLIKE POST
-router.put("/like_dislike/:postId", async (req, res) => {
+router.put("/like_dislike/:postId",VerifyToken, async (req, res) => {
   try {
     const postData = await post.findById(req.params.postId);
-    if (postData) {
-      if (postData.likes.includes(req.body.user_id)) {
-        await post.findByIdAndUpdate(req.params.postId, {
-          $pull: {
-            likes: req.body.user_id,
-          },
-        });
-        res.status(201).send({ message: "Disliked Post!" });
-      } else {
-        await post.findByIdAndUpdate(req.params.postId, {
-          $push: {
-            likes: req.body.user_id,
-          },
-        });
-        res.status(201).send({ message: "Liked Post!" });
-      }
-    } else {
-      res.status(422).send({ message: "Post not found" });
-    }
+    console.log(req.body.user_id) 
+    // if (postData) {
+    //   if (postData.likes.includes(req.body.user_id)) {
+    //     await post.findByIdAndUpdate(req.params.postId, {
+    //       $pull: {
+    //         likes: like,
+    //       },
+    //     });
+    //     res.status(201).send({ message: "Disliked Post!" });
+    //   } else {
+    //     await post.findByIdAndUpdate(req.params.postId, {
+    //       $push: {
+    //         likes: like,
+    //       },
+    //     });
+    //     res.status(201).send({ message: "Liked Post!" });
+    //   }
+    // } else {
+    //   res.status(422).send({ message: "Post not found" });
+    // }
   } catch (error) {
     res.status(500).send("internal server error");
     console.log(error);
