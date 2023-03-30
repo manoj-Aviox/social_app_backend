@@ -3,6 +3,7 @@ const user = require("../models/userModel");
 const upload = require("../middlewares/upload");
 const jwt = require("jsonwebtoken");
 const VerifyToken = require("../middlewares/VerifyToken");
+const BASEURL = process.env.IMAGE_BASE_URL;
 
 // ALL USERS
 router.get("/", async (req, res) => {
@@ -14,30 +15,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// USER BY ID
-// router.get("/:userId", async (req, res) => {
-//   try {
-//     const userExist = await user.findOne({ _id: req.params.userId });
-//     if (userExist) {
-//       res.send({ data: userExist });
-//     } else {
-//       res.status(401).json({ message: "User not found!" });
-//     }
-//   } catch (error) {
-//     res.status(500).send(error);
-//     console.log(error);
-//   }
-// });
-
 // USER'S PROFILE
 router.get("/me", VerifyToken, async (req, res) => {
   try {
     const userExists = await user.findOne({ email: req.user.email });
-    console.log(userExists);
     res.send({ profile: userExists });
   } catch (error) {
-    res.status(500).send(error);
-    console.log(error);
+    res.send(error);
   }
 });
 
@@ -52,15 +36,14 @@ router.put(
         { email: req.user.email },
         {
           $set: {
-            profilePicture: `http://localhost:4000/uploads/${req?.file?.filename}`,
+            profilePicture: `${BASEURL}${req?.file?.filename}`,
           },
         }
       );
 
       res.send({ message: "Profile Picture Updated!" });
     } catch (error) {
-      res.status(500).send("internal server error");
-      console.log(error);
+      res.send(error);
     }
   }
 );
@@ -76,15 +59,15 @@ router.put(
         { email: req.user.email },
         {
           $set: {
-            coverPicture: `http://localhost:4000/uploads/${req?.file?.filename}`,
+            coverPicture: `${BASEURL}${req?.file?.filename}`,
           },
         }
       );
 
       res.send({ message: "Cover Picture Updated!" });
     } catch (error) {
-      res.status(500).send("internal server error");
-      console.log(error);
+      res.send(error);
+      
     }
   }
 );
@@ -119,8 +102,8 @@ router.put("/send_request/:id", VerifyToken, async (req, res) => {
       res.send({ message: "Please enter valid userId" });
     }
   } catch (error) {
-    res.status(500).send("internal server error");
-    console.log(error);
+    res.send(error);
+    
   }
 });
 

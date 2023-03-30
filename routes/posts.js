@@ -3,6 +3,7 @@ const user = require("../models/userModel");
 const post = require("../models/postModel");
 const upload = require("../middlewares/upload");
 const VerifyToken = require("../middlewares/VerifyToken");
+const BASEURL = process.env.IMAGE_BASE_URL;
 
 // ALL POSTS
 router.get("/", async (req, res) => {
@@ -11,7 +12,7 @@ router.get("/", async (req, res) => {
     res.send({ posts: data.reverse() });
   } catch (error) {
     res.status(500).send("internal server error");
-    console.log(error);
+    
   }
 });
 
@@ -27,14 +28,14 @@ router.get("/:userId", async (req, res) => {
     }
   } catch (error) {
     res.status(00).send("internal server error");
-    console.log(error);
+    
   }
 });
 
 // ADD POST
 router.post("/", VerifyToken, upload.single("file"), async (req, res) => {
-  const { title, desc } = req.body;
-  if (!title || !desc) {
+  const { title, desc, file } = req.body;
+  if (!title || !desc || !file) {
     res.status(422).json({ message: "Please fill all fields!" });
   }
   try {
@@ -43,12 +44,11 @@ router.post("/", VerifyToken, upload.single("file"), async (req, res) => {
       title,
       desc,
       user_id: userExist._id,
-      img: `http://localhost:4000/uploads/${req.file.filename}`,
+      img: `${BASEURL}${req?.file?.filename}`,
     });
     res.send({ message: "Post Created!" });
   } catch (error) {
-    res.status(500).send("internal server error");
-    console.log(error);
+    
   }
 });
 
@@ -68,8 +68,7 @@ router.delete("/:postId", VerifyToken, async (req, res) => {
       res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
-    res.status(500).send("internal server error");
-    console.log(error);
+    
   }
 });
 
@@ -92,16 +91,15 @@ router.put("/:postId", VerifyToken, upload.single("file"), async (req, res) => {
       res.status(422).send({ message: "Post not found" });
     }
   } catch (error) {
-    res.status(500).send("internal server error");
-    console.log(error);
+    
   }
 });
 
 // LIKE & DISLIKE POST
-router.put("/like_dislike/:postId",VerifyToken, async (req, res) => {
+router.put("/like_dislike/:postId", VerifyToken, async (req, res) => {
   try {
     const postData = await post.findById(req.params.postId);
-    console.log(req.body.user_id) 
+    console.log(req.body.user_id);
     // if (postData) {
     //   if (postData.likes.includes(req.body.user_id)) {
     //     await post.findByIdAndUpdate(req.params.postId, {
@@ -122,8 +120,7 @@ router.put("/like_dislike/:postId",VerifyToken, async (req, res) => {
     //   res.status(422).send({ message: "Post not found" });
     // }
   } catch (error) {
-    res.status(500).send("internal server error");
-    console.log(error);
+    
   }
 });
 

@@ -34,6 +34,7 @@ router.post("/signup", async (req, res) => {
 
 // user login
 router.post("/login", async (req, res) => {
+  console.log(req)
   const { email, password } = req.body;
   if (!email || !password) {
     res.status(422).json({ message: "Please fill all fields!" });
@@ -47,9 +48,7 @@ router.post("/login", async (req, res) => {
       ).toString(CryptoJS.enc.Utf8);
       if (originalPassword === password) {
         var token = jwt.sign({ email, password }, process.env.JWT_SECRET);
-        res
-          .status(200)
-          .send({ message: "Logged In!", data: userExist, token: token });
+        res.status(200).send({ message: "Logged In!", data: userExist, token: token });
       } else {
         res.status(401).send({ message: "Wrong Password" });
       }

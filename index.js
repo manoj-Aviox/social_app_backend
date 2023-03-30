@@ -65,11 +65,11 @@ io.on("connection", (socket) => {
 });
 
 // middlewares
+app.use(cors());
 app.use(express.static(__dirname));
 app.use(morgan("common"));
 app.use(express.json());
 app.use(helmet());
-app.use(cors());
 
 // routes
 app.use("/api/users", users);
@@ -78,9 +78,9 @@ app.use("/api/posts", posts);
 app.use("/api/messages", messages);
 app.use("/api/chats", chats);
 
-app.get('/', (req, res) => {
-  res.send('Hey this is my API running 🥳')
-})
+app.get("/", (req, res) => {
+  res.send("Hey this is my API running 🥳");
+});
 
 // server starting
 server.listen(PORT, () => {
